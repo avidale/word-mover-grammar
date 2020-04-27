@@ -26,6 +26,7 @@ def test_simple_parse():
     assert result.success
     result.print()
     print(result.sample_a_tree())
+    assert len(list(result.iter_trees())) == 1
 
 
 def test_bad_parse():
@@ -33,3 +34,11 @@ def test_bad_parse():
     parser = EarleyParser(fruit_productions)
     result = parser.parse(words)
     assert not result.success
+
+
+def test_twoway_parse():
+    words = 'fruit flies like bananas'.split()
+    parser = EarleyParser(fruit_productions)
+    result = parser.parse(words)
+    assert result.success
+    assert len(list(result.iter_trees())) == 2
