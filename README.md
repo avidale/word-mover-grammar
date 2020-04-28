@@ -7,7 +7,13 @@ it supports:
 * lemma matching (like e.g. in [Yandex Alice](https://yandex.ru/dev/dialogs/alice/doc/nlu-docpage/));
 * word embedding matching (no known Python implementation).
 
-The 
+The mission of this package is to enable easy creation of custom
+grammars for various NLU problems, such as sentence classification
+or extraction of semantic slots.
+
+It is called "word mover grammar", because, just like word-mover-distance,
+it applies word embeddings to sentence templates, 
+but in a more structured way.
 
 ### Installation
 
@@ -15,10 +21,10 @@ The
 
 ### Usage
 #### Basic parsing
-WMG productions can be described in a YAML-like file. 
+WMG production rules can be described in a YAML-like file. 
 Lowercase tokens represent terminals, and uppercase tokens - terminals.
  
-The snippet below shows how to create a simple grammar and parser
+The snippet below shows how to create a simple grammar and parser:
 ```python
 import word_mover_grammar as wmg
 rules = """
@@ -59,8 +65,8 @@ True
 |   bananas    |     are      |    fruit     |
 =======
 ```
-If the phrase cannot be parsed, `result.success` will be `False` 
-- e.g. here
+If the phrase cannot be parsed, `result.success` will be 
+`False` - e.g. here:
 ```python
 result = parser.parse('bananas bananas bananas'.split())
 print(result.success)  # False
