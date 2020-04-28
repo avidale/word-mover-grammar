@@ -76,9 +76,11 @@ class W2VTerminal(Terminal):
         self.threshold = threshold
         self.vector = None
 
-    def compile(self, w2v, **kwargs) -> None:
+    def compile(self, w2v, w2v_threshold=0.5, **kwargs) -> None:
         if not w2v:
             raise ValueError('W2V Terminal need to be compiled with `w2v` argument')
+        if w2v_threshold is not None:
+            self.threshold = w2v_threshold
         self.w2v = w2v
         self.vector = w2v(self.data)
 
@@ -114,7 +116,7 @@ class RegexTerminal(Terminal):
     # todo: handle non-terminals with same names but different matching strategies
     def __init__(self, name: str, data):
         super(RegexTerminal, self).__init__(name=name, data=data)
-        self.regex = re.compile(self.data)
+        self.regex = re.compile('^{}$'.format(self.data))
 
     def matches_text(self, text: str) -> bool:
         return bool(self.regex.match(text))
