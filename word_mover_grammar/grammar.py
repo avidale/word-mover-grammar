@@ -1,4 +1,5 @@
 import random
+import re
 
 from typing import Dict, List, Tuple
 
@@ -107,6 +108,16 @@ class LemmaTerminal(Terminal):
             raise ValueError('Lemma Terminal not compiled')
         new_lemmas = set(self.lemmer(text))
         return bool(new_lemmas.intersection(self.lemmas))
+
+
+class RegexTerminal(Terminal):
+    # todo: handle non-terminals with same names but different matching strategies
+    def __init__(self, name: str, data):
+        super(RegexTerminal, self).__init__(name=name, data=data)
+        self.regex = re.compile(self.data)
+
+    def matches_text(self, text: str) -> bool:
+        return bool(self.regex.match(text))
 
 
 class Production:

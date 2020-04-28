@@ -1,5 +1,5 @@
 from word_mover_grammar.grammar import Symbol, NonTerminal, Production, MatchingMode
-from word_mover_grammar.grammar import Terminal, W2VTerminal, LemmaTerminal
+from word_mover_grammar.grammar import Terminal, W2VTerminal, LemmaTerminal, RegexTerminal
 
 
 from typing import Dict
@@ -21,6 +21,8 @@ def add_production(symbols: Dict[str, Symbol], lhs, rhs, mode=MatchingMode.EXACT
                 symbols[symbol] = W2VTerminal(name=symbol, data=symbol)
             elif mode == MatchingMode.LEMMA:
                 symbols[symbol] = LemmaTerminal(name=symbol, data=symbol)
+            elif mode == MatchingMode.REGEX:
+                symbols[symbol] = RegexTerminal(name=symbol, data=symbol)
             else:
                 raise ValueError('Matching mode `{}` not supported'.format(mode))
     production = Production(lhs=lhs_symbol, rhs=tuple(symbols[s] for s in rhs))
