@@ -7,6 +7,9 @@ from typing import Dict
 from word_mover_grammar.grammar import Production, Symbol, NonTerminal, Terminal
 
 
+ROOTS = ['$S', '$root', '$ROOT', 'S', 'ROOT', 'root']
+
+
 class State:
     def __init__(self, lhs, rhs, dot=0, left=0, right=0):
         self.lhs = lhs
@@ -134,12 +137,12 @@ class ParseResult:
 class EarleyParser:
     def __init__(self, symbols, root_symbol=None, w2v=None, w2v_threshold=None, lemmer=None):
         if root_symbol is None:
-            for symbol in ['S', 'root']:
+            for symbol in ROOTS:
                 if symbol in symbols:
                     root_symbol = symbol
                     break
         if not root_symbol:
-            raise ValueError('Could not guess the root symbol')
+            raise ValueError('Could not guess the root symbol.')
         elif root_symbol not in symbols:
             raise ValueError('Root symbol {} does not belong to the grammar'.format(root_symbol))
         self.root_symbol = root_symbol

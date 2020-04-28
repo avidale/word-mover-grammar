@@ -69,7 +69,10 @@ def load_granet(text):
         if line.startswith('  '):
             if not lhs:
                 raise SyntaxError('LHS undefined on line {}.'.format(i))
-            if line.strip().startswith('%'):
+            line = line.strip()
+            if line.startswith('-'):
+                line = line[1:]
+            if line.startswith('%'):
                 child_mode = line.strip()[1:]
                 continue
             add(lhs, line, mode=child_mode)

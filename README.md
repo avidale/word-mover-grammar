@@ -20,13 +20,19 @@ but in a more structured way.
 
 ### Usage
 #### Basic parsing
-WMG production rules can be described in a YAML-like file. 
+WMG production rules can be described in a text file with the following syntax:
 
-Lowercase tokens represent terminals, and capitalized tokens - terminals. 
-If this is too ambiguous, you can prepend non-terminals with `$` symbol
-and/or put terminals into single brackets.
+- Lowercase tokens represent terminals, and capitalized tokens - terminals. 
+You can also prepend non-terminals with `$` symbol
+and/or put terminals into single brackets. 
+- Left- and right-hand sides of productions can be separated 
+with `:` or `->` tokens.
+- Different right-hand-sides of the same production can be separated 
+with `|` symbol or with newline followed by several whitespaces.
+In the latter case, each RHS can be prepended with `-`, which makes
+the format YAML-compatible.
+- One-line comments can start with `#` symbol.
 
- 
 The snippet below shows how to create a simple grammar and parser:
 ```python
 import word_mover_grammar as wmg
