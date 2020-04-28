@@ -1,5 +1,5 @@
 from word_mover_grammar.earley import EarleyParser
-from word_mover_grammar.extended_grammar import rules2symbols
+from word_mover_grammar.grammar import rules2symbols
 
 fruit_productions = [
     ['S', ('NP', 'VP',)],

@@ -1,5 +1,5 @@
-from word_mover_grammar.extended_grammar import Symbol, NonTerminal, Production, MatchingMode
-from word_mover_grammar.extended_grammar import Terminal, W2VTerminal
+from word_mover_grammar.grammar import Symbol, NonTerminal, Production, MatchingMode
+from word_mover_grammar.grammar import Terminal, W2VTerminal, LemmaTerminal
 
 
 from typing import Dict
@@ -11,17 +11,18 @@ def add_production(symbols: Dict[str, Symbol], lhs, rhs, mode=MatchingMode.EXACT
     lhs_symbol: NonTerminal = symbols[lhs]
     for symbol in rhs:
         if symbol in symbols:
-            pass
+            continue
         if symbol.isupper() or symbol.startswith('$'):
             symbols[symbol] = NonTerminal(name=symbol)
         else:
-            # todo: add special matchers (lemma, w2v)
             if mode == MatchingMode.EXACT:
                 symbols[symbol] = Terminal(name=symbol, data=symbol)
             elif mode == MatchingMode.W2V:
                 symbols[symbol] = W2VTerminal(name=symbol, data=symbol)
+            elif mode == MatchingMode.LEMMA:
+                symbols[symbol] = LemmaTerminal(name=symbol, data=symbol)
             else:
-                raise ValueError('Matching mode {} not supported'.format(mode))
+                raise ValueError('Matching mode `{}` not supported'.format(mode))
     production = Production(lhs=lhs_symbol, rhs=tuple(symbols[s] for s in rhs))
     lhs_symbol.productions.append(production)
 
@@ -66,7 +67,7 @@ def load_granet(text):
             parts = line.strip().split(':')
             if len(parts) > 2:
                 raise SyntaxError('Multiple ":" within the line {}.'.format(i))
-            lhs = parts[0]
+            lhs = parts[0].strip()
             child_mode = mode
             if len(parts) == 2:
                 add(lhs, parts[1], mode=child_mode)

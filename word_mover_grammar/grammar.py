@@ -77,7 +77,7 @@ class W2VTerminal(Terminal):
 
     def compile(self, w2v, **kwargs) -> None:
         if not w2v:
-            raise ValueError('W2V Terminal need to be compiled with w2v argument')
+            raise ValueError('W2V Terminal need to be compiled with `w2v` argument')
         self.w2v = w2v
         self.vector = w2v(self.data)
 
@@ -87,6 +87,26 @@ class W2VTerminal(Terminal):
         new_vector = self.w2v(text)
         dot = sum(l*r for l, r in zip(self.vector, new_vector))
         return dot >= self.threshold
+
+
+class LemmaTerminal(Terminal):
+    # todo: handle non-terminals with same names but different matching strategies
+    def __init__(self, name: str, data, lemmas=None):
+        super(LemmaTerminal, self).__init__(name=name, data=data)
+        self.lemmer = None
+        self.lemmas = lemmas
+
+    def compile(self, lemmer, **kwargs) -> None:
+        if not lemmer:
+            raise ValueError('Lemma Terminal need to be compiled with `lemmer` argument')
+        self.lemmer = lemmer
+        self.lemmas = set(self.lemmer(self.data))
+
+    def matches_text(self, text: str) -> bool:
+        if not self.lemmer:
+            raise ValueError('Lemma Terminal not compiled')
+        new_lemmas = set(self.lemmer(text))
+        return bool(new_lemmas.intersection(self.lemmas))
 
 
 class Production:
@@ -110,6 +130,9 @@ class Production:
     @property
     def size(self):
         return len(self.rhs)
+
+    def __repr__(self):
+        return 'Production({}->{})'.format(self.lhs_name, ' '.join(self.rhs_names))
 
 
 def rules2symbols(rules, w2v=None):

@@ -4,7 +4,7 @@ import random
 from collections import defaultdict
 from typing import Dict
 
-from word_mover_grammar.extended_grammar import Production, Symbol, NonTerminal, Terminal
+from word_mover_grammar.grammar import Production, Symbol, NonTerminal, Terminal
 
 
 class State:
@@ -132,7 +132,7 @@ class ParseResult:
 
 
 class EarleyParser:
-    def __init__(self, symbols, root_symbol=None, w2v=None):
+    def __init__(self, symbols, root_symbol=None, w2v=None, lemmer=None):
         if root_symbol is None:
             for symbol in ['^', 'S', 'root']:
                 if symbol in symbols:
@@ -145,7 +145,7 @@ class EarleyParser:
         self.root_symbol = root_symbol
         self.symbols: Dict[str, Symbol] = symbols
         for _, symbol in self.symbols.items():
-            symbol.compile(w2v=w2v)
+            symbol.compile(w2v=w2v, lemmer=lemmer)
         self.root = Production(NonTerminal('.'), (self.symbols[self.root_symbol], ))
 
     def parse(self, words, verbose=False):
