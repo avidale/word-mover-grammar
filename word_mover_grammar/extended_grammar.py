@@ -1,7 +1,13 @@
 import random
 
-
 from typing import Dict, List, Tuple
+
+
+class MatchingMode:
+    EXACT = 'exact'
+    LEMMA = 'lemma'
+    REGEX = 'regex'
+    W2V = 'w2v'
 
 
 class Token:
@@ -24,6 +30,9 @@ class Symbol:
 
     def deep_sample(self) -> List:
         raise NotImplementedError()
+
+    def compile(self, **kwargs) -> None:
+        pass
 
 
 class NonTerminal(Symbol):
@@ -60,14 +69,22 @@ class Terminal(Symbol):
 
 class W2VTerminal(Terminal):
     # todo: handle non-terminals with same names but different matching strategies
-    def __init__(self, name: str, data, model, threshold=0.5):
+    def __init__(self, name: str, data, threshold=0.5):
         super(W2VTerminal, self).__init__(name=name, data=data)
-        self.model = model
+        self.w2v = None
         self.threshold = threshold
-        self.vector = self.model(self.data)  # todo: make sure they are normalized
+        self.vector = None
+
+    def compile(self, w2v, **kwargs) -> None:
+        if not w2v:
+            raise ValueError('W2V Terminal need to be compiled with w2v argument')
+        self.w2v = w2v
+        self.vector = w2v(self.data)
 
     def matches_text(self, text: str) -> bool:
-        new_vector = self.model(text)
+        if not self.w2v:
+            raise ValueError('W2V Terminal not compiled')
+        new_vector = self.w2v(text)
         dot = sum(l*r for l, r in zip(self.vector, new_vector))
         return dot >= self.threshold
 

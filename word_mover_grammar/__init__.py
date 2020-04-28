@@ -1,1 +1,1 @@
-from word_mover_grammar import grammar_tools, earley, extended_grammar
+from word_mover_grammar import earley, extended_grammar, text_to_grammar
