@@ -60,6 +60,9 @@ class ParseResult:
 
     def print(self, node=None, depth=0):
         """ Text representation of the forest """
+        if not self.success:
+            print('Empty parse result')
+            return
         if node is None:
             node = self.final_state
         if node.finished:
@@ -74,6 +77,8 @@ class ParseResult:
                 self.print(c, depth=depth + c.finished)
 
     def sample_a_tree(self, node=None, tree=None, last_parent=None):
+        if not self.success:
+            raise ValueError('Cannot sample trees from an empty parse result')
         if node is None:
             node = self.final_state
         if tree is None:
@@ -90,6 +95,9 @@ class ParseResult:
 
     def iter_trees(self, node=None, tree=None, last_parent=None):
         """ Loop over all possible parse trees (their number might be exponential) """
+        if not self.success:
+            return
+            yield
         if node is None:
             node = self.final_state
         if tree is None:
@@ -124,17 +132,21 @@ class ParseResult:
 
 
 class EarleyParser:
-    def __init__(self, symbols, root_symbol='^'):
-        self.symbols: Dict[str, Symbol] = symbols
+    def __init__(self, symbols, root_symbol=None):
+        if root_symbol is None:
+            for symbol in ['^', 'S', 'root']:
+                if symbol in symbols:
+                    root_symbol = symbol
+                    break
+        if not root_symbol:
+            raise ValueError('Could not guess the root symbol')
+        elif root_symbol not in symbols:
+            raise ValueError('Root symbol {} does not belong to the grammar'.format(root_symbol))
         self.root_symbol = root_symbol
-        # todo: create the "deep root" instead
-        assert len(self.symbols[self.root_symbol].productions) == 1
+        self.symbols: Dict[str, Symbol] = symbols
+        self.root = Production(NonTerminal('.'), (self.symbols[self.root_symbol], ))
 
-    @property
-    def root(self) -> Production:
-        return self.symbols[self.root_symbol].productions[0]
-
-    def parse(self, words):
+    def parse(self, words, verbose=False):
         initial_state = State(*self.root.names)
         states = [set() for i in range(len(words) + 1)]
         states[0].add(initial_state)
@@ -158,7 +170,8 @@ class EarleyParser:
                             if new_state not in states[k]:
                                 states[k].add(new_state)
                                 old_states.add(new_state)
-                                # print('adding new state from completer', new_state)
+                                if verbose:
+                                    print('adding new state from completer', new_state)
                                 # we add even non-unique children, because they belong to different parses
                             children = prev_state, state
                             forest[new_state].add(children)
@@ -171,16 +184,28 @@ class EarleyParser:
                             new_state = State(*production.names, 0, k)
                             new_state.right = k
                             if new_state not in states[k]:
-                                # print('adding new state from predictor', new_state)
+                                if verbose:
+                                    print('adding new state from predictor', new_state)
                                 old_states.add(new_state)
                                 states[k].add(new_state)
                     elif isinstance(current_symbol, Terminal):
                         # scanner: move pointer within the rule if we matched a terminal
-                        # todo: replace string-only terminals with regex/w2v matchers
                         if current_symbol.matches_text(token):
                             new_state = state.advance()
                             new_state.right = k + 1
+                            if verbose:
+                                print('adding new state from scanner', new_state)
                             states[k + 1].add(new_state)
+
+                            terminal_state = State(
+                                lhs=current_symbol.name,
+                                rhs=(token,),
+                                left=k,
+                                right=k+1,
+                                dot=1,
+                            )
+                            children = (state, terminal_state)
+                            forest[new_state].add(children)
                     else:
                         raise ValueError(
                             'Current symbol must be Terminal or Nonterminal, got {} instead'.format(current_symbol)
@@ -196,7 +221,7 @@ def print_tree_vertically(tree, root: State, depth=0):
         print_tree_vertically(tree, child, depth=depth+1)
 
 
-def print_tree(tree, root, w=10):
+def print_tree(tree, root, w=15):
     """ Print a constituency tree in a nice horizontal way. """
     # todo: calcualte w automatically by looking at the leaf lengths
     has_children = True

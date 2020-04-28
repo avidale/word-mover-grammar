@@ -59,6 +59,7 @@ class Terminal(Symbol):
 
 
 class W2VTerminal(Terminal):
+    # todo: handle non-terminals with same names but different matching strategies
     def __init__(self, name: str, data, model, threshold=0.5):
         super(W2VTerminal, self).__init__(name=name, data=data)
         self.model = model
@@ -101,7 +102,8 @@ def rules2symbols(rules, w2v=None):
             symbols[lhs] = NonTerminal(name=lhs)
         for symbol in rhs:
             if symbol not in symbols:
-                if symbol.isupper():  # todo: change the way of telling non-terminals from terminals
+                # todo: change the way of telling non-terminals from terminals
+                if symbol.isupper() or symbol.startswith('$'):
                     symbols[symbol] = NonTerminal(name=symbol)
                 else:
                     if w2v:

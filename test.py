@@ -2,7 +2,6 @@ from word_mover_grammar.earley import EarleyParser
 from word_mover_grammar.extended_grammar import rules2symbols
 
 fruit_productions = [
-    ['^', ('S',)],
     ['S', ('NP', 'VP',)],
     ['NP', ('N',)],
     ['NP', ('A', 'NP',)],
