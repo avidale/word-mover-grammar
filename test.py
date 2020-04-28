@@ -1,4 +1,5 @@
 from word_mover_grammar.earley import EarleyParser
+from word_mover_grammar.extended_grammar import rules2symbols
 
 fruit_productions = [
     ['^', ('S',)],
@@ -18,10 +19,12 @@ fruit_productions = [
     ['P', ('like',)],
 ]
 
+fruit_symbols = rules2symbols(fruit_productions)
+
 
 def test_simple_parse():
     words = 'bananas flies'.split()
-    parser = EarleyParser(fruit_productions)
+    parser = EarleyParser(fruit_symbols)
     result = parser.parse(words)
     assert result.success
     result.print()
@@ -31,14 +34,14 @@ def test_simple_parse():
 
 def test_bad_parse():
     words = 'bananas bananas'.split()
-    parser = EarleyParser(fruit_productions)
+    parser = EarleyParser(fruit_symbols)
     result = parser.parse(words)
     assert not result.success
 
 
-def test_twoway_parse():
+def test_two_way_parse():
     words = 'fruit flies like bananas'.split()
-    parser = EarleyParser(fruit_productions)
+    parser = EarleyParser(fruit_symbols)
     result = parser.parse(words)
     assert result.success
     assert len(list(result.iter_trees())) == 2

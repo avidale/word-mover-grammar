@@ -2,6 +2,9 @@ import copy
 import random
 
 from collections import defaultdict
+from typing import Dict
+
+from word_mover_grammar.extended_grammar import Production, Symbol, NonTerminal, Terminal
 
 
 class State:
@@ -121,15 +124,18 @@ class ParseResult:
 
 
 class EarleyParser:
-    def __init__(self, rules):
-        self.rules = rules
+    def __init__(self, symbols, root_symbol='^'):
+        self.symbols: Dict[str, Symbol] = symbols
+        self.root_symbol = root_symbol
+        # todo: create the "deep root" instead
+        assert len(self.symbols[self.root_symbol].productions) == 1
 
     @property
-    def root(self):
-        return self.rules[0]
+    def root(self) -> Production:
+        return self.symbols[self.root_symbol].productions[0]
 
     def parse(self, words):
-        initial_state = State(*self.root)
+        initial_state = State(*self.root.names)
         states = [set() for i in range(len(words) + 1)]
         states[0].add(initial_state)
 
@@ -158,26 +164,28 @@ class EarleyParser:
                             forest[new_state].add(children)
 
                 else:
-                    if state.current_token.isupper():  # todo: check non-terminals by class
+                    current_symbol = self.symbols[state.current_token]
+                    if isinstance(current_symbol, NonTerminal):
                         # predictor: create possible child non-terminals
-                        for rule in self.rules:
-                            # todo: loop over the dict element
-                            if rule[0] != state.current_token:
-                                continue
-                            new_state = State(*rule, 0, k)
+                        for production in current_symbol.productions:
+                            new_state = State(*production.names, 0, k)
                             new_state.right = k
                             if new_state not in states[k]:
                                 # print('adding new state from predictor', new_state)
                                 old_states.add(new_state)
                                 states[k].add(new_state)
-                    else:
+                    elif isinstance(current_symbol, Terminal):
                         # scanner: move pointer within the rule if we matched a terminal
                         # todo: replace string-only terminals with regex/w2v matchers
-                        if state.current_token == token:
+                        if current_symbol.matches_text(token):
                             new_state = state.advance()
                             new_state.right = k + 1
                             states[k + 1].add(new_state)
-        final_state = State(*self.root, len(self.root[1]), left=0, right=len(words))
+                    else:
+                        raise ValueError(
+                            'Current symbol must be Terminal or Nonterminal, got {} instead'.format(current_symbol)
+                        )
+        final_state = State(*self.root.names, self.root.size, left=0, right=len(words))
         return ParseResult(tokens=words, forest=forest, final_state=final_state)
 
 
