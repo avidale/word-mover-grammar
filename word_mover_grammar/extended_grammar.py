@@ -46,7 +46,7 @@ class Terminal(Symbol):
         self.data = data
 
     def matches(self, token: Token) -> bool:
-        return token.text == self.data
+        return self.matches_text(token.text)
 
     def sample(self):
         return [self]
@@ -56,6 +56,19 @@ class Terminal(Symbol):
 
     def matches_text(self, text: str) -> bool:
         return text == self.data
+
+
+class W2VTerminal(Terminal):
+    def __init__(self, name: str, data, model, threshold=0.5):
+        super(W2VTerminal, self).__init__(name=name, data=data)
+        self.model = model
+        self.threshold = threshold
+        self.vector = self.model(self.data)  # todo: make sure they are normalized
+
+    def matches_text(self, text: str) -> bool:
+        new_vector = self.model(text)
+        dot = sum(l*r for l, r in zip(self.vector, new_vector))
+        return dot >= self.threshold
 
 
 class Production:
@@ -81,7 +94,7 @@ class Production:
         return len(self.rhs)
 
 
-def rules2symbols(rules):
+def rules2symbols(rules, w2v=None):
     symbols: Dict[str, Symbol] = {}
     for lhs, rhs in rules:
         if lhs not in symbols:
@@ -91,7 +104,10 @@ def rules2symbols(rules):
                 if symbol.isupper():  # todo: change the way of telling non-terminals from terminals
                     symbols[symbol] = NonTerminal(name=symbol)
                 else:
-                    symbols[symbol] = Terminal(name=symbol, data=symbol)
+                    if w2v:
+                        symbols[symbol] = W2VTerminal(name=symbol, data=symbol, model=w2v)
+                    else:
+                        symbols[symbol] = Terminal(name=symbol, data=symbol)
         production = Production(lhs=symbols[lhs], rhs=tuple(symbols[s] for s in rhs))
         symbols[lhs].productions.append(production)
     return symbols
