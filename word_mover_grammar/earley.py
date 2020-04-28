@@ -134,7 +134,7 @@ class ParseResult:
 class EarleyParser:
     def __init__(self, symbols, root_symbol=None, w2v=None, w2v_threshold=None, lemmer=None):
         if root_symbol is None:
-            for symbol in ['^', 'S', 'root']:
+            for symbol in ['S', 'root']:
                 if symbol in symbols:
                     root_symbol = symbol
                     break
@@ -146,7 +146,7 @@ class EarleyParser:
         self.symbols: Dict[str, Symbol] = symbols
         for _, symbol in self.symbols.items():
             symbol.compile(w2v=w2v, w2v_threshold=w2v_threshold, lemmer=lemmer)
-        self.root = Production(NonTerminal('.'), (self.symbols[self.root_symbol], ))
+        self.root = Production(NonTerminal('^'), (self.symbols[self.root_symbol], ))
 
     def parse(self, words, verbose=False):
         initial_state = State(*self.root.names)
@@ -155,7 +155,7 @@ class EarleyParser:
 
         forest = defaultdict(set)
 
-        for k, token in enumerate(words + ['^']):
+        for k, token in enumerate(words + ['$']):
             old_states = {s for s in states[k]}
             for i in range(1000):
                 if not old_states:

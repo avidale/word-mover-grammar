@@ -113,13 +113,17 @@ class LemmaTerminal(Terminal):
 
 
 class RegexTerminal(Terminal):
-    # todo: handle non-terminals with same names but different matching strategies
     def __init__(self, name: str, data):
         super(RegexTerminal, self).__init__(name=name, data=data)
         self.regex = re.compile('^{}$'.format(self.data))
 
     def matches_text(self, text: str) -> bool:
         return bool(self.regex.match(text))
+
+
+class AnyTerminal(Terminal):
+    def matches_text(self, text: str) -> bool:
+        return True
 
 
 class Production:

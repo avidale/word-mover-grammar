@@ -1,8 +1,7 @@
 # word-mover-grammar
 This package implements a context-free grammar parser with rather flexible
- matching of terminals. Along with 
-standard exact matching (like e.g. in [NLTK](https://www.nltk.org/book/ch08.html)),
-it supports: 
+ matching of terminals. The supported matching modes are:
+* standard exact matching (like e.g. in [NLTK](https://www.nltk.org/book/ch08.html)); 
 * regex matching (like e.g. in [Lark](https://github.com/lark-parser/lark));
 * lemma matching (like e.g. in [Yandex Alice](https://yandex.ru/dev/dialogs/alice/doc/nlu-docpage/));
 * word embedding matching (no known Python implementation).
@@ -22,7 +21,11 @@ but in a more structured way.
 ### Usage
 #### Basic parsing
 WMG production rules can be described in a YAML-like file. 
-Lowercase tokens represent terminals, and uppercase tokens - terminals.
+
+Lowercase tokens represent terminals, and capitalized tokens - terminals. 
+If this is too ambiguous, you can prepend non-terminals with `$` symbol
+and/or put terminals into single brackets.
+
  
 The snippet below shows how to create a simple grammar and parser:
 ```python
