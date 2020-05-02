@@ -219,7 +219,12 @@ True
 ## Forms and slots
 In dialogue systems, phrases are often viewed as *forms* - containers of information.
 Each meaningful piece of information can be stored in a typed *slot*. 
-In WMG, each slot is a associated with some non-terminal symbol. 
+You can think of them as of 
+[named groups](https://www.regular-expressions.info/refext.html)
+in regular expressions, or as extended 
+[named entities](https://en.wikipedia.org/wiki/Named-entity_recognition).
+
+In WMG, each slot is associated with some non-terminal symbol. 
 This association can be configured in the same file as the production rules.
 
 ```python
@@ -243,12 +248,18 @@ result = parser.parse('turn on the light in the living room'.split())
 print(result.slots)
 ```
 The result will be a 
-[yandex-compatible(https://yandex.ru/dev/dialogs/alice/doc/nlu-docpage/#data_to_skill)] 
+[yandex-compatible](https://yandex.ru/dev/dialogs/alice/doc/nlu-docpage/#data_to_skill) 
 map of slot names to the slots found in the phrase.
 ```
 {'what': {'type': 'string', 'value': 'light', 'text': 'light', 'tokens': {'start': 3, 'end': 4}},
  'room': {'type': 'string', 'value': 'living room', 'text': 'living room', 'tokens': {'start': 6, 'end': 8}}}
 ```
+A few caveats:
+- currently, in ambiguous prhases the slots are taken just from the first parse tree.
+If you want to extract slots from an arbitrary tree, 
+you can call `result.extract_slots(tree)`.
+- each slot is filled only once. If the non-terminal occurs several times in the phrase,
+the corresponding slot will be filled with the first occurrence.
 
 
 ## Future plans

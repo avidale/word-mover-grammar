@@ -139,9 +139,13 @@ class ParseResult:
     def extract_slots(self, tree=None):
         if tree is None:
             tree = next(self.iter_trees())
-        self.slots = {}
+            self.slots = {}
+            slots = self.slots
+        else:
+            slots = {}
         self._symbol2slot = {v['source']: k for k, v in self.slots_schema.items()}
-        self._fill_slots(tree, self.final_state, slots=self.slots)
+        self._fill_slots(tree, node=self.final_state, slots=slots)
+        return slots
 
     def _fill_slots(self, tree, node, slots):
         lhs = node.lhs
