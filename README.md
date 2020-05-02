@@ -14,12 +14,19 @@ It is called "word mover grammar", because, just like word-mover-distance,
 it applies word embeddings to sentence templates, 
 but in a more structured way.
 
-### Installation
+#### Table of Contents
+1. [Installation](#installation)
+1. [Basic parsing](#basic-parsing)
+1. [Ambiguous phrases](#ambiguous-phrases)
+1. [Inexact matcing](#inexact-matching)
+1. [Forms and slots](#forms-and-slots)
+1. [Future plans](#future-plans)
+
+## Installation
 
 `pip install word-mover-grammar`
 
-### Usage
-#### Basic parsing
+## Basic parsing
 WMG production rules can be described in a text file with the following syntax:
 
 - Lowercase tokens represent terminals, and capitalized tokens - terminals. 
@@ -81,7 +88,7 @@ result = parser.parse('bananas bananas bananas'.split())
 print(result.success)  # False
 ```
 
-#### Ambiguous phrases
+## Ambiguous phrases
 Some phrases can be parsed in more that one way. In this case, 
 `result.success` will still be `True`, but the number of trees will be
 more than one. 
@@ -116,7 +123,7 @@ The parsing result has trees for both interpretations:
 =======
 ```
 
-#### Inexact matching
+## Inexact matching
 By default, WMG uses only exact matching of tokens.
 However, several more matching ways can be activated by special directives:
 * `%w2v`: words are considered equal, 
@@ -209,7 +216,42 @@ True
 =======
 ```
 
-### Future plans
+## Forms and slots
+In dialogue systems, phrases are often viewed as *forms* - containers of information.
+Each meaningful piece of information can be stored in a typed *slot*. 
+In WMG, each slot is a associated with some non-terminal symbol. 
+This association can be configured in the same file as the production rules.
+
+```python
+import word_mover_grammar as wmg
+cfg = """
+root:
+    turn the $What $Where on
+    turn on the $What $Where
+$What: light | conditioner
+$Where: in the $Room
+$Room: bathroom | kitchen | bedroom | living room
+slots:
+    what:
+        source: $What                   
+    room:
+        source: $Room
+"""
+grammar = wmg.text_to_grammar.load_granet(cfg)
+parser = wmg.earley.EarleyParser(grammar)
+result = parser.parse('turn on the light in the living room'.split())
+print(result.slots)
+```
+The result will be a 
+[yandex-compatible(https://yandex.ru/dev/dialogs/alice/doc/nlu-docpage/#data_to_skill)] 
+map of slot names to the slots found in the phrase.
+```
+{'what': {'type': 'string', 'value': 'light', 'text': 'light', 'tokens': {'start': 3, 'end': 4}},
+ 'room': {'type': 'string', 'value': 'living room', 'text': 'living room', 'tokens': {'start': 6, 'end': 8}}}
+```
+
+
+## Future plans
 In the future, we plan to enhance the library in the following ways:
 * Conversion to and from NLTK grammars
 * Support of quantifiers and brackets

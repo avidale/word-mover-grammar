@@ -2,9 +2,9 @@ import copy
 import random
 
 from collections import defaultdict
-from typing import Dict
+from typing import Dict, List
 
-from word_mover_grammar.grammar import Production, Symbol, NonTerminal, Terminal
+from word_mover_grammar.grammar import Production, Symbol, NonTerminal, Terminal, Grammar, Slot
 
 
 ROOTS = ['$S', '$root', '$ROOT', 'S', 'ROOT', 'root']
@@ -45,17 +45,20 @@ class State:
         return hash(self.tuple)
 
     def __repr__(self):
-        return str(self.tuple)
+        return 'State' + str(self.tuple)
 
     def __eq__(self, other):
         return self.tuple == other.tuple
 
 
 class ParseResult:
-    def __init__(self, tokens, forest, final_state):
+    def __init__(self, tokens, forest, final_state, slots=None, slots_schema=None):
         self.tokens = tokens
         self.forest = forest
         self.final_state = final_state
+        self.slots_schema = slots_schema
+        self._symbol2slot = {}
+        self.slots = slots or {}
 
     @property
     def success(self):
@@ -133,9 +136,37 @@ class ParseResult:
         # todo: implement top-k (or even top-p) beam search sampling of parse trees
         raise NotImplementedError()
 
+    def extract_slots(self, tree=None):
+        if tree is None:
+            tree = next(self.iter_trees())
+        self.slots = {}
+        self._symbol2slot = {v['source']: k for k, v in self.slots_schema.items()}
+        self._fill_slots(tree, self.final_state, slots=self.slots)
+
+    def _fill_slots(self, tree, node, slots):
+        lhs = node.lhs
+        if lhs not in slots and lhs in self._symbol2slot:
+            text = ' '.join(self.tokens[node.left: node.right])
+            slot = Slot(
+                tokens={
+                    'start': node.left,
+                    'end': node.right,
+                },
+                value=text,
+                text=text,
+                type='string',
+            )
+            slots[self._symbol2slot[lhs]] = slot
+        for child in tree.get(node, []):
+            self._fill_slots(tree, child, slots)
+
 
 class EarleyParser:
-    def __init__(self, symbols, root_symbol=None, w2v=None, w2v_threshold=None, lemmer=None):
+    def __init__(self, grammar, root_symbol=None, w2v=None, w2v_threshold=None, lemmer=None):
+        self.grammar = grammar
+        symbols = self.grammar.symbols
+        if root_symbol is None:
+            root_symbol = self.grammar.start_symbol
         if root_symbol is None:
             for symbol in ROOTS:
                 if symbol in symbols:
@@ -216,7 +247,13 @@ class EarleyParser:
                             'Current symbol must be Terminal or Nonterminal, got {} instead'.format(current_symbol)
                         )
         final_state = State(*self.root.names, self.root.size, left=0, right=len(words))
-        return ParseResult(tokens=words, forest=forest, final_state=final_state)
+
+        result = ParseResult(tokens=words, forest=forest, final_state=final_state)
+        if self.grammar.slots:
+            # todo: calculate the most probable (or just any?) values of the slots
+            result.slots_schema = self.grammar.slots
+            result.extract_slots()
+        return result
 
 
 def print_tree_vertically(tree, root: State, depth=0):

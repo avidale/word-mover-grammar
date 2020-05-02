@@ -21,6 +21,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
+        'pyyaml'
     ],
     extras_require={
         'rumorph': ['pymorphy2[fast]', 'pymorphy2-dicts-ru'],

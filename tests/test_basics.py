@@ -1,3 +1,5 @@
+import word_mover_grammar as wmg
+
 from word_mover_grammar.earley import EarleyParser
 from word_mover_grammar.grammar import rules2symbols
 
@@ -18,7 +20,24 @@ fruit_productions = [
     ['P', ('like',)],
 ]
 
-fruit_symbols = rules2symbols(fruit_productions)
+fruit_symbols = wmg.grammar.Grammar(rules2symbols(fruit_productions), start_symbol='S')
+
+slotted_granet = """
+root:
+    включи $What $Where
+slots:
+    what:
+        source: $What                   
+    where:
+        source: $Where
+$What:
+    свет | кондиционер
+$Where:
+    в $Room
+    на $Room
+$Room:
+    ванне | кухне | спальне
+"""
 
 
 def test_simple_parse():
@@ -44,3 +63,15 @@ def test_two_way_parse():
     result = parser.parse(words)
     assert result.success
     assert len(list(result.iter_trees())) == 2
+
+
+def test_granet_slots():
+    g = wmg.text_to_grammar.load_granet(slotted_granet)
+    assert 'what' in g.slots
+    assert g.slots['what']['source'] == '$What'
+
+    parser = wmg.earley.EarleyParser(g)
+
+    result = parser.parse('включи свет в спальне'.split())
+    assert set(result.slots.keys()) == {'what', 'where'}
+    assert result.slots['what'].text == 'свет'

@@ -1,7 +1,7 @@
 import random
 import re
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 
 class MatchingMode:
@@ -150,6 +150,29 @@ class Production:
 
     def __repr__(self):
         return 'Production({}->{})'.format(self.lhs_name, ' '.join(self.rhs_names))
+
+
+class Grammar:
+    def __init__(
+            self,
+            symbols: Dict[str, Symbol],
+            start_symbol: str,
+            slots: Optional[Dict] = None
+    ):
+        self.start_symbol: str = start_symbol
+        self.symbols: Dict[str, Symbol] = symbols
+        self.slots = slots
+
+
+class Slot:
+    def __init__(self, type, value, text, tokens):
+        self.type = type
+        self.value = value
+        self.text = text
+        self.tokens = tokens
+
+    def __repr__(self):
+        return str(self.__dict__)
 
 
 def rules2symbols(rules, w2v=None):
